@@ -3,14 +3,15 @@ defmodule ErrxTest do
   doctest Errx
 
   test "wrap correctly" do
-    err = Errx.new({:error, :failure_code})
+    err = Errx.new({:error, :failure_code}, "something wrong")
 
     assert err ==
              {:error,
               %Errx{
                 file: "test/errx_test.exs:6",
                 func: "Elixir.ErrxTest.test wrap correctly/1",
-                reason: :failure_code
+                reason: :failure_code,
+                details: "something wrong"
               }}
 
     err = Errx.new(:failure_code)
@@ -18,9 +19,10 @@ defmodule ErrxTest do
     assert err ==
              {:error,
               %Errx{
-                file: "test/errx_test.exs:16",
+                file: "test/errx_test.exs:17",
                 func: "Elixir.ErrxTest.test wrap correctly/1",
-                reason: :failure_code
+                reason: :failure_code,
+                details: nil
               }}
 
     {:error, %{reason: reason}} = err
@@ -28,7 +30,7 @@ defmodule ErrxTest do
   end
 
   test "get original reason correctly" do
-    err = Errx.new({:error, :failure_code})
+    err = Errx.new({:error, :failure_code}, "something wrong")
     assert Errx.error(err) == :failure_code
 
     err = {:error, :failure_code}
