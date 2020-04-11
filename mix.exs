@@ -19,7 +19,8 @@ defmodule Errx.MixProject do
 
   defp deps do
     [
-      {:jason, "~> 1.0"}
+      {:jason, "~> 1.0"},
+      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false}
     ]
   end
 
@@ -30,8 +31,7 @@ defmodule Errx.MixProject do
   defp package() do
     [
       # These are the default files included in the package
-      files: ~w(lib .formatter.exs mix.exs README* readme* LICENSE*
-                license* CHANGELOG* changelog* src),
+      files: ~w(lib .formatter.exs mix.exs README* LICENSE*),
       licenses: ["GNU GPL V3"],
       links: %{"GitHub" => "https://github.com/ardhitama/errx"}
     ]
