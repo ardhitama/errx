@@ -31,14 +31,14 @@ defmodule Errx do
     end
   end
 
-  @spec first(any) :: any
+  @spec first(any) :: Errx.t()
   def first(error) do
     case error do
       %Errx{error: %Errx{} = error} ->
         first(error)
 
       _ ->
-        error
+        wrap(error)
     end
   end
 
