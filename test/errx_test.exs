@@ -3,7 +3,7 @@ defmodule ErrxTest do
   doctest Errx
 
   test "wrap correctly" do
-    err = Errx.wrap({:error, :failure_code})
+    err = Errx.wrap(:failure_code)
 
     assert err == %Errx{
              file: "test/errx_test.exs:6",
@@ -11,18 +11,26 @@ defmodule ErrxTest do
              reason: :failure_code
            }
 
+    err = Errx.wrap({:error, :failure_code})
+
+    assert err == %Errx{
+             file: "test/errx_test.exs:14",
+             func: "Elixir.ErrxTest.test wrap correctly/1",
+             reason: :failure_code
+           }
+
     assert Errx.wrap(err) == %Errx{
-             file: "test/errx_test.exs:6",
+             file: "test/errx_test.exs:14",
              func: "Elixir.ErrxTest.test wrap correctly/1",
              reason: :failure_code
            }
 
     assert Errx.wrap(%Errx{err | reason: :parent_failure}, err) == %Errx{
-             file: "test/errx_test.exs:6",
+             file: "test/errx_test.exs:14",
              func: "Elixir.ErrxTest.test wrap correctly/1",
              reason: :failure_code,
              parent: %Errx{
-               file: "test/errx_test.exs:6",
+               file: "test/errx_test.exs:14",
                func: "Elixir.ErrxTest.test wrap correctly/1",
                parent: nil,
                reason: :parent_failure

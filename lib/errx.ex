@@ -17,6 +17,9 @@ defmodule Errx do
 
       {:error, reason} ->
         %Errx{func: func, file: file, reason: reason}
+
+      reason ->
+        %Errx{func: func, file: file, reason: reason}
     end
   end
 
