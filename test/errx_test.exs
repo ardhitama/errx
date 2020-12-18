@@ -3,135 +3,61 @@ defmodule ErrxTest do
   doctest Errx
 
   test "wrap correctly" do
-    assert Errx.wrap({:error, :failure_code}, "something wrong") == %Errx{
+    err = Errx.wrap({:error, :failure_code})
+
+    assert err == %Errx{
              file: "test/errx_test.exs:6",
              func: "Elixir.ErrxTest.test wrap correctly/1",
-             error: :failure_code,
-             context: "something wrong"
+             reason: :failure_code
            }
 
-    assert Errx.wrap(:failure_code) == %Errx{
-             file: "test/errx_test.exs:13",
+    assert Errx.wrap(err) == %Errx{
+             file: "test/errx_test.exs:6",
              func: "Elixir.ErrxTest.test wrap correctly/1",
-             error: :failure_code,
-             context: nil
-           }
-
-    err = {:error, :first} |> Errx.wrap(:details) |> Errx.wrap()
-
-    assert err == %Errx{
-             context: :details,
-             file: "test/errx_test.exs:20",
-             func: "Elixir.ErrxTest.test wrap correctly/1",
-             error: :first
-           }
-
-    err = {:error, :first} |> Errx.wrap() |> Errx.wrap(:details)
-
-    assert err == %Errx{
-             context: :details,
-             file: "test/errx_test.exs:29",
-             func: "Elixir.ErrxTest.test wrap correctly/1",
-             error: %Errx{
-               context: nil,
-               file: "test/errx_test.exs:29",
-               func: "Elixir.ErrxTest.test wrap correctly/1",
-               error: :first
-             }
-           }
-
-    err = {:error, :first} |> Errx.wrap() |> Errx.wrap()
-
-    assert err == %Errx{
-             context: nil,
-             file: "test/errx_test.exs:43",
-             func: "Elixir.ErrxTest.test wrap correctly/1",
-             error: :first
+             reason: :failure_code
            }
   end
 
-  test "get original reason correctly" do
-    err = Errx.wrap({:error, :failure_code}, "something wrong")
-
-    assert Errx.first(err) == %Errx{
-             context: "something wrong",
-             file: "test/errx_test.exs:54",
-             func: "Elixir.ErrxTest.test get original reason correctly/1",
-             error: :failure_code
-           }
-
-    err = {:error, :failure_code}
-    assert  Errx.match(Errx.first(err), :failure_code)
-
-    err = {:foo, :bar}
-    assert Errx.match(Errx.first(err), {:foo, :bar})
-
-    err = {:error, :first} |> Errx.wrap() |> Errx.wrap()
-
-    assert Errx.first(err) == %Errx{
-             context: nil,
-             error: :first,
-             file: "test/errx_test.exs:69",
-             func: "Elixir.ErrxTest.test get original reason correctly/1"
-           }
-
-    err = {:error, :first} |> Errx.wrap(:details) |> Errx.wrap()
-
-    assert Errx.first(err) == %Errx{
-             context: :details,
-             error: :first,
-             file: "test/errx_test.exs:78",
-             func: "Elixir.ErrxTest.test get original reason correctly/1"
-           }
-
-    err = {:error, :first} |> Errx.wrap() |> Errx.wrap(:details)
-
-    assert Errx.first(err) == %Errx{
-             context: nil,
-             error: :first,
-             file: "test/errx_test.exs:87",
-             func: "Elixir.ErrxTest.test get original reason correctly/1"
-           }
-
-    assert Errx.match(Errx.first(:val), :val)
-  end
-
-  test "allows errx to be matched in pattern match" do
-    res =
-      case {:error, :failure} do
-        Errx.match(:failure) ->
-          true
-
-        _ ->
-          false
-      end
-
-    assert res == false
+  test "allows errx to be matched in pattern matching" do
+    err_tuple = {:error, :failure}
+    err = Errx.wrap(err_tuple)
 
     res =
-      case Errx.wrap(:failure) do
-        Errx.match(:failure) ->
+      case err do
+        Errx.match(_err_tuple) ->
           true
       end
 
-    assert res == true
+    assert res
 
     res =
-      with {:ok} <- Errx.wrap(:val) do
-        false
-      else
-        Errx.match(:val) ->
+      case err do
+        %Errx{reason: :failure} ->
           true
       end
 
-    assert res == true
+    assert res
+
+    res =
+      case err do
+        Errx.match(_err_tuple) ->
+          true
+      end
+
+    assert res
+
+    res =
+      case err_tuple do
+        Errx.match(_err) ->
+          true
+      end
+
+    assert res
   end
 
   test "allows errx to be matched in exunit assertion" do
-    err = Errx.wrap(:failure)
+    err = Errx.wrap({:error, :failure})
     assert Errx.match(err, {:error, :failure})
     assert Errx.match({:error, :failure}, err)
-    assert Errx.match(err, :failure)
-    assert Errx.match(:failure, err)
   end
 end

@@ -1,15 +1,10 @@
 defmodule Errx do
   @type t :: %Errx{}
 
-  defstruct [:file, :func, :error, :context]
+  defstruct [:file, :func, :reason]
 
-  @spec wrap(any) :: Errx.t()
+  @spec wrap({:error, any} | Errx.t()) :: Errx.t()
   def wrap(error) do
-    wrap(error, nil)
-  end
-
-  @spec wrap(any, any) :: Errx.t()
-  def wrap(error, context) do
     {mod, fname, farity, [file: file, line: line]} =
       Process.info(self(), :current_stacktrace) |> elem(1) |> Enum.fetch!(2)
 
@@ -17,52 +12,38 @@ defmodule Errx do
     file = "#{file}:#{line}"
 
     case error do
-      %Errx{} when context != nil ->
-        %Errx{func: func, file: file, error: error, context: context}
-
       %Errx{} ->
         error
 
       {:error, reason} ->
-        %Errx{func: func, file: file, error: reason, context: context}
-
-      _ ->
-        %Errx{func: func, file: file, error: error, context: context}
+        %Errx{func: func, file: file, reason: reason}
     end
   end
 
-  @spec first(any) :: Errx.t()
-  def first(error) do
-    case error do
-      %Errx{error: %Errx{} = error} ->
-        first(error)
-
-      _ ->
-        wrap(error)
-    end
-  end
-
-  defmacro match(error_value) do
+  defmacro match({:error, reason}) do
     quote do
-      %Errx{error: unquote(error_value)}
+      %Errx{reason: unquote(reason)}
     end
   end
 
+  defmacro match(%Errx{reason: reason}) do
+    quote do
+      {:error, unquote(reason)}
+    end
+  end
 
-  @spec match(any, any) :: boolean
-  def match(%Errx{error: err1}, {:error, err2}) do
+  defmacro match(any) do
+    quote do
+      unquote(any)
+    end
+  end
+
+  @spec match({:error, any} | Errx.t(), {:error, any} | Errx.t()) :: boolean
+  def match(%Errx{reason: err1}, {:error, err2}) do
     err1 == err2
   end
 
-  def match({:error, err1}, %Errx{error: err2}) do
-    err1 == err2
-  end
-
-  def match(err1, %Errx{error: err2}) do
-    err1 == err2
-  end
-
-  def match(%Errx{error: err1}, err2) do
+  def match({:error, err1}, %Errx{reason: err2}) do
     err1 == err2
   end
 end
