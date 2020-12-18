@@ -61,10 +61,10 @@ defmodule ErrxTest do
            }
 
     err = {:error, :failure_code}
-    assert Errx.first(err) == {:error, :failure_code}
+    assert  Errx.match(Errx.first(err), :failure_code)
 
     err = {:foo, :bar}
-    assert Errx.first(err) == {:foo, :bar}
+    assert Errx.match(Errx.first(err), {:foo, :bar})
 
     err = {:error, :first} |> Errx.wrap() |> Errx.wrap()
 
@@ -93,7 +93,7 @@ defmodule ErrxTest do
              func: "Elixir.ErrxTest.test get original reason correctly/1"
            }
 
-    assert Errx.first(:val) == :val
+    assert Errx.match(Errx.first(:val), :val)
   end
 
   test "allows errx to be matched in pattern match" do
@@ -125,5 +125,13 @@ defmodule ErrxTest do
       end
 
     assert res == true
+  end
+
+  test "allows errx to be matched in exunit assertion" do
+    err = Errx.wrap(:failure)
+    assert Errx.match(err, {:error, :failure})
+    assert Errx.match({:error, :failure}, err)
+    assert Errx.match(err, :failure)
+    assert Errx.match(:failure, err)
   end
 end

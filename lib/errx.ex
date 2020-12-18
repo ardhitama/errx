@@ -47,4 +47,22 @@ defmodule Errx do
       %Errx{error: unquote(error_value)}
     end
   end
+
+
+  @spec match(any, any) :: boolean
+  def match(%Errx{error: err1}, {:error, err2}) do
+    err1 == err2
+  end
+
+  def match({:error, err1}, %Errx{error: err2}) do
+    err1 == err2
+  end
+
+  def match(err1, %Errx{error: err2}) do
+    err1 == err2
+  end
+
+  def match(%Errx{error: err1}, err2) do
+    err1 == err2
+  end
 end
