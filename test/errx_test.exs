@@ -17,15 +17,15 @@ defmodule ErrxTest do
              reason: :failure_code
            }
 
-    assert Errx.wrap(%Errx{err | reason: :child_failure}, err) == %Errx{
+    assert Errx.wrap(%Errx{err | reason: :parent_failure}, err) == %Errx{
              file: "test/errx_test.exs:6",
              func: "Elixir.ErrxTest.test wrap correctly/1",
-             reason: :child_failure,
+             reason: :failure_code,
              parent: %Errx{
                file: "test/errx_test.exs:6",
                func: "Elixir.ErrxTest.test wrap correctly/1",
                parent: nil,
-               reason: :failure_code
+               reason: :parent_failure
              }
            }
   end

@@ -20,9 +20,9 @@ defmodule Errx do
     end
   end
 
-  @spec wrap({:error, any} | Errx.t(), Errx.t()) :: Errx.t()
-  def wrap(error, parent = %Errx{}) do
-    %Errx{wrap(error) | parent: parent}
+  @spec wrap({:error, any} | Errx.t(), {:error, any} | Errx.t()) :: Errx.t()
+  def wrap(parent_error, child_error) do
+    %Errx{wrap(child_error) | parent: wrap(parent_error)}
   end
 
   @spec match(any) :: any
