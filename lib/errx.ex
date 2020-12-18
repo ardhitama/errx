@@ -3,14 +3,16 @@ defmodule Errx do
 
   defstruct [:file, :func, :reason, :parent]
 
-  @spec wrap(any) :: Errx.t()
-  def wrap(error) do
+  defp loc(stack) do
     {mod, fname, farity, [file: file, line: line]} =
-      Process.info(self(), :current_stacktrace) |> elem(1) |> Enum.fetch!(2)
+      Process.info(self(), :current_stacktrace) |> elem(1) |> Enum.fetch!(stack)
 
     func = "#{mod}.#{fname}/#{farity}"
     file = "#{file}:#{line}"
+    {func, file}
+  end
 
+  defp wrap(error, func, file) do
     case error do
       %Errx{} ->
         error
@@ -23,9 +25,18 @@ defmodule Errx do
     end
   end
 
+  @spec wrap(any) :: Errx.t()
+  def wrap(error) do
+    {func, file} = loc(3)
+
+    wrap(error, func, file)
+  end
+
   @spec wrap(any, any) :: Errx.t()
   def wrap(parent_error, child_error) do
-    %Errx{wrap(child_error) | parent: wrap(parent_error)}
+    {func, file} = loc(3)
+
+    %Errx{wrap(child_error, func, file) | parent: wrap(parent_error, func, file)}
   end
 
   defmacro match(reason) do

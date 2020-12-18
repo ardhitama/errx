@@ -36,6 +36,63 @@ defmodule ErrxTest do
                reason: :parent_failure
              }
            }
+
+    assert Errx.wrap(:parent_error, :child_error) == %Errx{
+             file: "test/errx_test.exs:40",
+             func: "Elixir.ErrxTest.test wrap correctly/1",
+             reason: :child_error,
+             parent: %Errx{
+               file: "test/errx_test.exs:40",
+               func: "Elixir.ErrxTest.test wrap correctly/1",
+               parent: nil,
+               reason: :parent_error
+             }
+           }
+
+    assert Errx.wrap({:error, :parent_error}, :child_error) == %Errx{
+             file: "test/errx_test.exs:52",
+             func: "Elixir.ErrxTest.test wrap correctly/1",
+             reason: :child_error,
+             parent: %Errx{
+               file: "test/errx_test.exs:52",
+               func: "Elixir.ErrxTest.test wrap correctly/1",
+               parent: nil,
+               reason: :parent_error
+             }
+           }
+
+    assert Errx.wrap(err, :child_error) == %Errx{
+             file: "test/errx_test.exs:64",
+             func: "Elixir.ErrxTest.test wrap correctly/1",
+             reason: :child_error,
+             parent: %Errx{
+               file: "test/errx_test.exs:14",
+               func: "Elixir.ErrxTest.test wrap correctly/1",
+               parent: nil,
+               reason: :failure_code
+             }
+           }
+
+    err1 = Errx.wrap({:error, :failure_code1})
+    err2 = Errx.wrap(err1, {:error, :failure_code2})
+    err3 = Errx.wrap({:error, :failure_code3})
+
+    assert Errx.wrap(err2, err3) == %Errx{
+             file: "test/errx_test.exs:78",
+             func: "Elixir.ErrxTest.test wrap correctly/1",
+             parent: %Errx{
+               file: "test/errx_test.exs:77",
+               func: "Elixir.ErrxTest.test wrap correctly/1",
+               parent: %Errx{
+                 file: "test/errx_test.exs:76",
+                 func: "Elixir.ErrxTest.test wrap correctly/1",
+                 parent: nil,
+                 reason: :failure_code1
+               },
+               reason: :failure_code2
+             },
+             reason: :failure_code3
+           }
   end
 
   test "allows errx to be matched in pattern matching" do
