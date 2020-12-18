@@ -28,16 +28,9 @@ defmodule Errx do
     %Errx{wrap(child_error) | parent: wrap(parent_error)}
   end
 
-  @spec match(any) :: any
-  defmacro match(%Errx{reason: reason}) do
+  defmacro match(reason) do
     quote do
-      {:error, unquote(reason)}
-    end
-  end
-
-  defmacro match(any) do
-    quote do
-      unquote(any)
+      %Errx{reason: unquote(reason)}
     end
   end
 

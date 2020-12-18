@@ -39,40 +39,10 @@ defmodule ErrxTest do
   end
 
   test "allows errx to be matched in pattern matching" do
-    err_tuple = {:error, :failure}
-    err = Errx.wrap(err_tuple)
-
-    res =
-      case err do
-        Errx.match(_err_tuple) ->
-          true
-      end
-
-    assert res
-
-    res =
-      case err do
-        %Errx{reason: :failure} ->
-          true
-      end
-
-    assert res
-
-    res =
-      case err do
-        Errx.match(_err_tuple) ->
-          true
-      end
-
-    assert res
-
-    res =
-      case err_tuple do
-        Errx.match(_err) ->
-          true
-      end
-
-    assert res
+    assert (case(Errx.wrap(:failure)) do
+              Errx.match(:failure) ->
+                true
+            end)
   end
 
   test "allows errx to be matched in exunit assertion" do
