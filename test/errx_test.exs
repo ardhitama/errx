@@ -16,6 +16,18 @@ defmodule ErrxTest do
              func: "Elixir.ErrxTest.test wrap correctly/1",
              reason: :failure_code
            }
+
+    assert Errx.wrap(%Errx{err | reason: :child_failure}, err) == %Errx{
+             file: "test/errx_test.exs:6",
+             func: "Elixir.ErrxTest.test wrap correctly/1",
+             reason: :child_failure,
+             parent: %Errx{
+               file: "test/errx_test.exs:6",
+               func: "Elixir.ErrxTest.test wrap correctly/1",
+               parent: nil,
+               reason: :failure_code
+             }
+           }
   end
 
   test "allows errx to be matched in pattern matching" do

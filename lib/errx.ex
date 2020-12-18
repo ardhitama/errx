@@ -1,7 +1,7 @@
 defmodule Errx do
   @type t :: %Errx{}
 
-  defstruct [:file, :func, :reason]
+  defstruct [:file, :func, :reason, :parent]
 
   @spec wrap({:error, any} | Errx.t()) :: Errx.t()
   def wrap(error) do
@@ -20,6 +20,12 @@ defmodule Errx do
     end
   end
 
+  @spec wrap({:error, any} | Errx.t(), Errx.t()) :: Errx.t()
+  def wrap(error, parent = %Errx{}) do
+    %Errx{wrap(error) | parent: parent}
+  end
+
+  @spec match(any) :: any
   defmacro match({:error, reason}) do
     quote do
       %Errx{reason: unquote(reason)}
