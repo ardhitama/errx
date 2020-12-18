@@ -55,4 +55,12 @@ defmodule Errx do
   def match({:error, err1}, %Errx{reason: err2}) do
     err1 == err2
   end
+
+  def match(err1, %Errx{reason: err2}) do
+    err1 == err2
+  end
+
+  def match(%Errx{reason: err1}, err2) do
+    err1 == err2
+  end
 end

@@ -77,7 +77,11 @@ defmodule ErrxTest do
 
   test "allows errx to be matched in exunit assertion" do
     err = Errx.wrap({:error, :failure})
+
     assert Errx.match(err, {:error, :failure})
     assert Errx.match({:error, :failure}, err)
+
+    assert Errx.match(err, :failure)
+    assert Errx.match(:failure, err)
   end
 end
