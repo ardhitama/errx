@@ -78,7 +78,7 @@ defmodule Errx do
 
   @impl true
   def exception(attributes) when is_atom(attributes) do
-    wrap_with_loc(attributes,3)
+    wrap_with_loc(attributes, 3)
   end
 
   @impl true

@@ -163,5 +163,13 @@ defmodule ErrxTest do
         assert err.metadata.message == "failure"
         assert err.file =~ ~r/.+errx_test\.exs:.+/
     end
+
+    try do
+      raise Errx.wrap(:failure)
+    rescue
+      err in [Errx] ->
+        assert err.reason == :failure
+        assert err.file =~ ~r/.+errx_test\.exs:.+/
+    end
   end
 end
