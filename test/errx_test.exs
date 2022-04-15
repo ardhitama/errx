@@ -112,9 +112,56 @@ defmodule ErrxTest do
     assert Errx.match(:failure, err)
   end
 
-  test "metadata" do
+  test "metadata enrichment" do
     err = Errx.metadata(:treason, %{foo: :bar})
     assert Errx.match(err, :treason)
     assert Errx.metadata(err) == %{foo: :bar}
+  end
+
+  test "raising exception" do
+    assert_raise Errx, fn ->
+      raise Errx
+    end
+
+    assert_raise Errx, "error", fn ->
+      raise Errx, "error"
+    end
+
+    assert_raise Errx, "failure", fn ->
+      raise Errx, Errx.wrap(:failure)
+    end
+
+    try do
+      raise Errx
+    rescue
+      err in [Errx] ->
+        assert err.reason == :errx_exception
+        assert err.file =~ ~r/.+errx_test\.exs:.+/
+    end
+
+    try do
+      raise Errx, Errx.wrap(:failure)
+    rescue
+      err in [Errx] ->
+        assert err.reason == :failure
+        assert err.file =~ ~r/.+errx_test\.exs:.+/
+    end
+
+    try do
+      raise Errx, :failure
+    rescue
+      err in [Errx] ->
+        assert err.reason == :failure
+        assert err.file =~ ~r/.+errx_test\.exs:.+/
+    end
+
+    try do
+      raise Errx, "failure"
+    rescue
+      err in [Errx] ->
+        assert err.reason == :errx_exception
+        assert err.metadata.message == "failure"
+        assert err.file =~ ~r/.+errx_test\.exs:.+/
+    end
   end
 end

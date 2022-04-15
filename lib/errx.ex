@@ -1,7 +1,7 @@
 defmodule Errx do
   @type t :: %Errx{}
 
-  defstruct [:file, :func, :reason, :metadata, :parent]
+  defexception [:file, :func, :reason, :metadata, :parent]
 
   defp loc(stack) do
     {mod, fname, farity, [file: file, line: line]} =
@@ -12,7 +12,9 @@ defmodule Errx do
     {func, file}
   end
 
-  defp wrap(error, func, file) do
+  defp wrap_with_loc(error, stack_skip) do
+    {func, file} = loc(stack_skip)
+
     case error do
       %Errx{} ->
         error
@@ -27,21 +29,17 @@ defmodule Errx do
 
   @spec wrap(any) :: Errx.t()
   def wrap(error) do
-    {func, file} = loc(3)
-
-    wrap(error, func, file)
+    wrap_with_loc(error, 3)
   end
 
   @spec wrap(any, any) :: Errx.t()
   def wrap(parent_error, child_error) do
-    {func, file} = loc(3)
-
-    %Errx{wrap(child_error, func, file) | parent: wrap(parent_error, func, file)}
+    %Errx{wrap_with_loc(child_error, 4) | parent: wrap_with_loc(parent_error, 4)}
   end
 
   @spec metadata(any, any) :: Errx.t()
   def metadata(error, metadata) do
-    %Errx{wrap(error) | metadata: metadata}
+    %Errx{wrap_with_loc(error, 3) | metadata: metadata}
   end
 
   @spec metadata(any) :: any
@@ -76,5 +74,43 @@ defmodule Errx do
 
   def match(%Errx{reason: err1}, err2) do
     err1 == err2
+  end
+
+  @impl true
+  def exception(attributes) when is_atom(attributes) do
+    wrap_with_loc(attributes,3)
+  end
+
+  @impl true
+  def exception(attributes) when is_bitstring(attributes) do
+    %Errx{wrap_with_loc(:errx_exception, 4) | metadata: %{message: attributes}}
+  end
+
+  @impl true
+  def exception(%Errx{} = attributes) do
+    attributes
+  end
+
+  @impl true
+  def exception(attributes) do
+    %Errx{wrap_with_loc(:errx_exception, 4) | metadata: %{data: attributes}}
+  end
+
+  @impl true
+  @spec message(Errx.t()) :: binary
+  def message(%Errx{} = error) do
+    case error do
+      %Errx{metadata: %{message: reason}} when is_bitstring(reason) ->
+        reason
+
+      %Errx{reason: reason} when is_atom(reason) ->
+        Atom.to_string(reason)
+
+      %Errx{reason: reason} ->
+        inspect(reason)
+
+      _ ->
+        inspect(error)
+    end
   end
 end
