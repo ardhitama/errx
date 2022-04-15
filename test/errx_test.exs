@@ -111,4 +111,10 @@ defmodule ErrxTest do
     assert Errx.match(err, :failure)
     assert Errx.match(:failure, err)
   end
+
+  test "metadata" do
+    err = Errx.metadata(:treason, %{foo: :bar})
+    assert Errx.match(err, :treason)
+    assert Errx.metadata(err) == %{foo: :bar}
+  end
 end

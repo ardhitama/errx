@@ -4,7 +4,7 @@ defmodule Errx.MixProject do
   def project do
     [
       app: :errx,
-      version: "0.2.8",
+      version: "0.2.9",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
       deps: deps(),

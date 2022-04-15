@@ -1,7 +1,7 @@
 defmodule Errx do
   @type t :: %Errx{}
 
-  defstruct [:file, :func, :reason, :parent]
+  defstruct [:file, :func, :reason, :metadata, :parent]
 
   defp loc(stack) do
     {mod, fname, farity, [file: file, line: line]} =
@@ -37,6 +37,22 @@ defmodule Errx do
     {func, file} = loc(3)
 
     %Errx{wrap(child_error, func, file) | parent: wrap(parent_error, func, file)}
+  end
+
+  @spec metadata(any, any) :: Errx.t()
+  def metadata(error, metadata) do
+    %Errx{wrap(error) | metadata: metadata}
+  end
+
+  @spec metadata(any) :: any
+  def metadata(error) do
+    case error do
+      %Errx{} ->
+        error.metadata
+
+      _ ->
+        nil
+    end
   end
 
   defmacro match(reason) do
