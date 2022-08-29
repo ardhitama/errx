@@ -5,94 +5,112 @@ defmodule ErrxTest do
   test "wrap correctly" do
     err = Errx.wrap(:failure_code)
 
-    assert err == %Errx{
-             file: "test/errx_test.exs:6",
-             func: "Elixir.ErrxTest.test wrap correctly/1",
-             reason: :failure_code
-           }
+    assert err ==
+             {:error,
+              %Errx{
+                file: "test/errx_test.exs:6",
+                func: "Elixir.ErrxTest.test wrap correctly/1",
+                reason: :failure_code
+              }}
 
     err = Errx.wrap({:error, :failure_code})
 
-    assert err == %Errx{
-             file: "test/errx_test.exs:14",
-             func: "Elixir.ErrxTest.test wrap correctly/1",
-             reason: :failure_code
-           }
+    assert err ==
+             {:error,
+              %Errx{
+                file: "test/errx_test.exs:16",
+                func: "Elixir.ErrxTest.test wrap correctly/1",
+                reason: :failure_code
+              }}
 
-    assert Errx.wrap(err) == %Errx{
-             file: "test/errx_test.exs:14",
-             func: "Elixir.ErrxTest.test wrap correctly/1",
-             reason: :failure_code
-           }
+    assert Errx.wrap(err) ==
+             {:error,
+              %Errx{
+                file: "test/errx_test.exs:16",
+                func: "Elixir.ErrxTest.test wrap correctly/1",
+                reason: :failure_code
+              }}
 
-    assert Errx.wrap(%Errx{err | reason: :parent_failure}, err) == %Errx{
-             file: "test/errx_test.exs:14",
-             func: "Elixir.ErrxTest.test wrap correctly/1",
-             reason: :failure_code,
-             parent: %Errx{
-               file: "test/errx_test.exs:14",
-               func: "Elixir.ErrxTest.test wrap correctly/1",
-               parent: nil,
-               reason: :parent_failure
-             }
-           }
+    {:error, err} = err
 
-    assert Errx.wrap(:parent_error, :child_error) == %Errx{
-             file: "test/errx_test.exs:40",
-             func: "Elixir.ErrxTest.test wrap correctly/1",
-             reason: :child_error,
-             parent: %Errx{
-               file: "test/errx_test.exs:40",
-               func: "Elixir.ErrxTest.test wrap correctly/1",
-               parent: nil,
-               reason: :parent_error
-             }
-           }
+    assert Errx.wrap(%Errx{err | reason: :parent_failure}, err) ==
+             {:error,
+              %Errx{
+                file: "test/errx_test.exs:16",
+                func: "Elixir.ErrxTest.test wrap correctly/1",
+                reason: :failure_code,
+                parent: %Errx{
+                  file: "test/errx_test.exs:16",
+                  func: "Elixir.ErrxTest.test wrap correctly/1",
+                  parent: nil,
+                  reason: :parent_failure
+                }
+              }}
 
-    assert Errx.wrap({:error, :parent_error}, :child_error) == %Errx{
-             file: "test/errx_test.exs:52",
-             func: "Elixir.ErrxTest.test wrap correctly/1",
-             reason: :child_error,
-             parent: %Errx{
-               file: "test/errx_test.exs:52",
-               func: "Elixir.ErrxTest.test wrap correctly/1",
-               parent: nil,
-               reason: :parent_error
-             }
-           }
+    assert Errx.wrap(:parent_error, :child_error) ==
+             {:error,
+              %Errx{
+                file: "test/errx_test.exs:50",
+                func: "Elixir.ErrxTest.test wrap correctly/1",
+                reason: :child_error,
+                parent: %Errx{
+                  file: "test/errx_test.exs:50",
+                  func: "Elixir.ErrxTest.test wrap correctly/1",
+                  parent: nil,
+                  reason: :parent_error
+                }
+              }}
 
-    assert Errx.wrap(err, :child_error) == %Errx{
-             file: "test/errx_test.exs:64",
-             func: "Elixir.ErrxTest.test wrap correctly/1",
-             reason: :child_error,
-             parent: %Errx{
-               file: "test/errx_test.exs:14",
-               func: "Elixir.ErrxTest.test wrap correctly/1",
-               parent: nil,
-               reason: :failure_code
-             }
-           }
+    assert Errx.wrap({:error, :parent_error}, :child_error) ==
+             {:error,
+              %Errx{
+                file: "test/errx_test.exs:64",
+                func: "Elixir.ErrxTest.test wrap correctly/1",
+                reason: :child_error,
+                parent: %Errx{
+                  file: "test/errx_test.exs:64",
+                  func: "Elixir.ErrxTest.test wrap correctly/1",
+                  parent: nil,
+                  reason: :parent_error
+                }
+              }}
+
+    assert Errx.wrap(err, :child_error) ==
+             {:error,
+              %Errx{
+                file: "test/errx_test.exs:78",
+                func: "Elixir.ErrxTest.test wrap correctly/1",
+                reason: :child_error,
+                parent: %Errx{
+                  file: "test/errx_test.exs:16",
+                  func: "Elixir.ErrxTest.test wrap correctly/1",
+                  parent: nil,
+                  reason: :failure_code
+                }
+              }}
 
     err1 = Errx.wrap({:error, :failure_code1})
     err2 = Errx.wrap(err1, {:error, :failure_code2})
     err3 = Errx.wrap({:error, :failure_code3})
 
-    assert Errx.wrap(err2, err3) == %Errx{
-             file: "test/errx_test.exs:78",
-             func: "Elixir.ErrxTest.test wrap correctly/1",
-             parent: %Errx{
-               file: "test/errx_test.exs:77",
-               func: "Elixir.ErrxTest.test wrap correctly/1",
-               parent: %Errx{
-                 file: "test/errx_test.exs:76",
-                 func: "Elixir.ErrxTest.test wrap correctly/1",
-                 parent: nil,
-                 reason: :failure_code1
-               },
-               reason: :failure_code2
-             },
-             reason: :failure_code3
-           }
+    assert Errx.wrap(err2, err3) ==
+             {:error,
+              %Errx{
+                file: "test/errx_test.exs:94",
+                func: "Elixir.ErrxTest.test wrap correctly/1",
+                parent: %Errx{
+                  file: "test/errx_test.exs:93",
+                  func: "Elixir.ErrxTest.test wrap correctly/1",
+                  parent: %Errx{
+                    file: "test/errx_test.exs:92",
+                    func: "Elixir.ErrxTest.test wrap correctly/1",
+                    parent: nil,
+                    reason: :failure_code1
+                  },
+                  reason: :failure_code2
+                },
+                reason: :failure_code3
+              }}
   end
 
   test "allows errx to be matched in pattern matching" do
@@ -114,6 +132,17 @@ defmodule ErrxTest do
 
   test "metadata enrichment" do
     err = Errx.metadata(:treason, %{foo: :bar})
+
+    assert err ==
+             {:error,
+              %Errx{
+                file: "test/errx_test.exs:134",
+                func: "Elixir.ErrxTest.test metadata enrichment/1",
+                metadata: %{foo: :bar},
+                parent: nil,
+                reason: :treason
+              }}
+
     assert Errx.match(err, :treason)
     assert Errx.metadata(err) == %{foo: :bar}
   end
@@ -161,14 +190,6 @@ defmodule ErrxTest do
       err in [Errx] ->
         assert err.reason == :errx_exception
         assert err.metadata.message == "failure"
-        assert err.file =~ ~r/.+errx_test\.exs:.+/
-    end
-
-    try do
-      raise Errx.wrap(:failure)
-    rescue
-      err in [Errx] ->
-        assert err.reason == :failure
         assert err.file =~ ~r/.+errx_test\.exs:.+/
     end
   end

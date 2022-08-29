@@ -19,6 +19,9 @@ defmodule Errx do
       %Errx{} ->
         error
 
+      {:error, %Errx{} = error} ->
+        error
+
       {:error, reason} ->
         %Errx{func: func, file: file, reason: reason}
 
@@ -27,22 +30,32 @@ defmodule Errx do
     end
   end
 
-  @spec wrap(any) :: Errx.t()
+  @spec wrap(any) :: {:error, Errx.t()}
   def wrap(error) do
-    wrap_with_loc(error, 3)
+    {:error, wrap_with_loc(error, 4)}
   end
 
-  @spec wrap(any, any) :: Errx.t()
+  @spec wrap(any, any) :: {:error, Errx.t()}
   def wrap(parent_error, child_error) do
-    %Errx{wrap_with_loc(child_error, 4) | parent: wrap_with_loc(parent_error, 4)}
+    {:error, %Errx{wrap_with_loc(child_error, 4) | parent: wrap_with_loc(parent_error, 4)}}
   end
 
-  @spec metadata(any, any) :: Errx.t()
+  @spec metadata(any, any) :: {:error, Errx.t()}
   def metadata(error, metadata) do
-    %Errx{wrap_with_loc(error, 3) | metadata: metadata}
+    {:error, %Errx{wrap_with_loc(error, 4) | metadata: metadata}}
   end
 
   @spec metadata(any) :: any
+  def metadata({:error, error}) do
+    case error do
+      %Errx{} ->
+        error.metadata
+
+      _ ->
+        nil
+    end
+  end
+
   def metadata(error) do
     case error do
       %Errx{} ->
@@ -55,24 +68,24 @@ defmodule Errx do
 
   defmacro match(reason) do
     quote do
-      %Errx{reason: unquote(reason)}
+      {:error, %Errx{reason: unquote(reason)}}
     end
   end
 
   @spec match(any, any) :: boolean
-  def match(%Errx{reason: err1}, {:error, err2}) do
+  def match({:error, %Errx{reason: err1}}, {:error, err2}) do
     err1 == err2
   end
 
-  def match({:error, err1}, %Errx{reason: err2}) do
+  def match({:error, err1}, {:error, %Errx{reason: err2}}) do
     err1 == err2
   end
 
-  def match(err1, %Errx{reason: err2}) do
+  def match(err1, {:error, %Errx{reason: err2}}) do
     err1 == err2
   end
 
-  def match(%Errx{reason: err1}, err2) do
+  def match({:error, %Errx{reason: err1}}, err2) do
     err1 == err2
   end
 
@@ -92,13 +105,34 @@ defmodule Errx do
   end
 
   @impl true
+  def exception({:error, %Errx{} = attributes}) do
+    attributes
+  end
+
+  @impl true
   def exception(attributes) do
     %Errx{wrap_with_loc(:errx_exception, 4) | metadata: %{data: attributes}}
   end
 
   @impl true
-  @spec message(Errx.t()) :: binary
   def message(%Errx{} = error) do
+    case error do
+      %Errx{metadata: %{message: reason}} when is_bitstring(reason) ->
+        reason
+
+      %Errx{reason: reason} when is_atom(reason) ->
+        Atom.to_string(reason)
+
+      %Errx{reason: reason} ->
+        inspect(reason)
+
+      _ ->
+        inspect(error)
+    end
+  end
+
+  @impl true
+  def message({:error, %Errx{} = error}) do
     case error do
       %Errx{metadata: %{message: reason}} when is_bitstring(reason) ->
         reason
