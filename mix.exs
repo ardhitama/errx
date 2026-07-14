@@ -1,39 +1,68 @@
 defmodule Errx.MixProject do
   use Mix.Project
 
+  @version "0.5.0"
+  @source_url "https://github.com/ardhitama/errx"
+
   def project do
     [
       app: :errx,
-      version: "0.4.1",
-      elixir: "~> 1.10",
+      version: @version,
+      elixir: "~> 1.14",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       description: description(),
-      package: package()
+      package: package(),
+      name: "Errx",
+      source_url: @source_url,
+      docs: docs(),
+      aliases: aliases()
     ]
   end
 
-  def application do
-    []
+  def cli do
+    [preferred_envs: [quality: :test, credo: :test]]
   end
+
+  def application, do: []
 
   defp deps do
     [
-      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
-      {:credo, "~> 1.6", only: :dev, runtime: false}
+      {:ex_doc, ">= 0.34.0 and < 0.41.0", only: :dev, runtime: false},
+      {:credo, "~> 1.7.19", only: [:dev, :test], runtime: false}
     ]
   end
 
-  defp description() do
-    "Initially build to reduce the author's pain point when using erlang tuple style error handling where it has no information of who create the error tuple."
+  defp description do
+    "Contextual error tuples with caller locations, metadata, and cause chains."
   end
 
-  defp package() do
+  defp package do
     [
-      # These are the default files included in the package
       files: ~w(lib .formatter.exs mix.exs README* LICENSE*),
-      licenses: ["GNU GPL V3"],
-      links: %{"GitHub" => "https://github.com/ardhitama/errx"}
+      licenses: ["GPL-3.0-only"],
+      maintainers: ["ardhitama"],
+      links: %{"GitHub" => @source_url}
+    ]
+  end
+
+  defp docs do
+    [
+      main: "readme",
+      extras: ["README.md"],
+      source_ref: "v#{@version}"
+    ]
+  end
+
+  defp aliases do
+    [
+      quality: [
+        "format --check-formatted",
+        "compile --warnings-as-errors",
+        "test",
+        "credo --strict",
+        "hex.build"
+      ]
     ]
   end
 end
